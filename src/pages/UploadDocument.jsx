@@ -31,35 +31,53 @@ export default function UploadDocument() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen flex flex-col text-white">
+
       <Navbar />
 
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-4">Upload Document</h1>
+      {/* Header */}
+      <div className="glass-card p-6 mx-6 mt-6 text-center">
+        <h1 className="text-2xl font-semibold">
+          Upload Document
+        </h1>
+        <p className="text-gray-300 text-sm mt-1">
+          Upload campus notices and documents
+        </p>
+      </div>
+
+      {/* Upload Form */}
+      <div className="p-8 flex justify-center">
 
         <form
           onSubmit={handleUpload}
-          className="bg-white p-6 rounded-xl shadow w-full max-w-md"
+          className="glass-card p-8 w-full max-w-md space-y-4"
         >
+
           <input
             type="text"
             placeholder="Document Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="border p-2 w-full mb-3 rounded"
+            className="glass-input w-full"
           />
 
           <input
             type="file"
             onChange={(e) => setFile(e.target.files[0])}
-            className="mb-3"
+            className="glass-input w-full"
           />
 
-          <button className="bg-blue-600 text-white px-4 py-2 rounded">
-            Upload
+          <button
+            type="submit"
+            className="glass-button w-full text-center"
+          >
+            Upload Document
           </button>
+
         </form>
+
       </div>
+
     </div>
   );
 }

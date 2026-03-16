@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+import Login from "./pages/login.jsx";
 import UserHome from "./pages/UserHome";
 import Chatbot from "./pages/Chatbot";
 import Notices from "./pages/Notices";
@@ -11,10 +12,11 @@ import SuspiciousUsers from "./pages/SuspiciousUsers";
 
 function App() {
   return (
-    // i am the king of the world
+    
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<UserHome />} />
+        {/* public login route at root */}
+        <Route path="/" element={<Login />} />
         <Route path="/home" element={<UserHome />} />
         <Route path="/chat" element={<Chatbot />} />
         <Route path="/notices" element={<Notices />} />
@@ -23,6 +25,7 @@ function App() {
         <Route path="/documents" element={<AllDocuments />} />
         <Route path="/edit-docs" element={<EditDocuments />} />
         <Route path="/suspicious-users" element={<SuspiciousUsers />} />
+        {/* fallback or catch-all could be added here */}
       </Routes>
     </BrowserRouter>
   );

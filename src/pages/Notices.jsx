@@ -22,30 +22,49 @@ export default function Notices() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen flex flex-col text-white">
 
       <Navbar />
 
-      <div className="p-6">
-        <h1 className="text-2xl font-semibold mb-4">All Notices</h1>
+      {/* Header */}
+      <div className="glass-card p-6 mx-6 mt-6 text-center">
+        <h1 className="text-2xl font-semibold">All Notices</h1>
+        <p className="text-gray-300 text-sm mt-1">
+          Browse all campus announcements and documents
+        </p>
+      </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
+      {/* Notices Grid */}
+      <div className="p-8 max-w-6xl mx-auto w-full">
+
+        <div className="grid md:grid-cols-2 gap-6">
+
           {notices.map((notice, index) => (
-            <div key={index} className="bg-white p-4 rounded-xl shadow">
 
-              <h2 className="font-semibold mb-2">{notice.title}</h2>
+            <div
+              key={index}
+              className="glass-card p-6 hover:scale-[1.02] transition"
+            >
+
+              <h2 className="font-semibold text-lg mb-3">
+                {notice.title}
+              </h2>
 
               <button
                 onClick={() => window.open(notice.file)}
-                className="text-blue-600 font-medium"
+                className="glass-button text-blue-300"
               >
                 📄 Open Document
               </button>
 
             </div>
+
           ))}
+
         </div>
+
       </div>
+
     </div>
   );
 }

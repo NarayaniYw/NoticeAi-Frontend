@@ -1,3 +1,123 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* Reset browser spacing and prevent overflow */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+
+/* Global Background */
+
+body {
+  background-image: url("/background_new.png");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: white;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+
+/* Glassmorphism Card */
+
+.glass-card {
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  background: rgba(255,255,255,0.08);
+
+  border: 1px solid rgba(255,255,255,0.18);
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.35),
+    0 0 12px rgba(37,99,235,0.35);
+
+  transition: all 0.25s ease;
+}
+
+
+/* Hover glow */
+
+.glass-card:hover {
+
+  transform: translateY(-4px);
+
+  box-shadow:
+    0 14px 45px rgba(0,0,0,0.45),
+    0 0 20px rgba(37,99,235,0.55);
+}
+
+
+/* Glass Navbar */
+
+.glass-navbar {
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  background: rgba(0,0,0,0.35);
+
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+
+/* Glass Button */
+
+.glass-button {
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  background: rgba(255,255,255,0.12);
+
+  border: 1px solid rgba(255,255,255,0.2);
+
+  border-radius: 10px;
+
+  padding: 8px 16px;
+
+  transition: all 0.25s ease;
+
+  cursor: pointer;
+}
+
+.glass-button:hover {
+
+  background: rgba(255,255,255,0.2);
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 0 10px rgba(37,99,235,0.45);
+}
+
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.45);
+}
