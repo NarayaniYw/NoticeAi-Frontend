@@ -214,6 +214,10 @@ export const loginWithBackend = ({ username, password, role }) =>
 
 export const registerWithBackend = ({ username, email, password, role }) =>
   requestFirstAvailable([
+    "/signup",
+    "/auth/signup",
+    "/api/signup",
+    "/api/auth/signup",
     "/register",
     "/auth/register",
     "/api/register",
