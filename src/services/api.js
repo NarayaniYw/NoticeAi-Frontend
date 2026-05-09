@@ -211,3 +211,14 @@ export const loginWithBackend = ({ username, password, role }) =>
     method: "POST",
     body: JSON.stringify({ username, password, role }),
   });
+
+export const registerWithBackend = ({ username, email, password, role }) =>
+  requestFirstAvailable([
+    "/register",
+    "/auth/register",
+    "/api/register",
+    "/api/auth/register",
+  ], {
+    method: "POST",
+    body: JSON.stringify({ username, email, password, role }),
+  });

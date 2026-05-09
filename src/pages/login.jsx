@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ApiError, loginWithBackend, saveAuthSession } from "../services/api";
 
 export default function Login() {
@@ -121,6 +121,13 @@ export default function Login() {
           </button>
 
         </div>
+
+        <p className="text-center text-gray-300 text-sm mt-6">
+          New to SmartDocAI?{" "}
+          <Link to="/register" className="text-blue-300 hover:underline">
+            Register
+          </Link>
+        </p>
 
       </div>
 

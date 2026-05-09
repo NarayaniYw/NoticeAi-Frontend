@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/login.jsx";
+import Register from "./pages/Register";
 import UserHome from "./pages/UserHome";
 import Chatbot from "./pages/Chatbot";
 import Notices from "./pages/Notices";
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         {/* public login route at root */}
         <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route path="/home" element={<UserHome />} />
         <Route path="/chat" element={<Chatbot />} />
         <Route path="/notices" element={<Notices />} />
