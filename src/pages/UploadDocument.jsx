@@ -1,12 +1,21 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
+import { uploadDocument } from "../services/api";
 
 export default function UploadDocument() {
 
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleUpload = (e) => {
+  const getUploadedFileUrl = (data) =>
+    data?.file_url ||
+    data?.fileUrl ||
+    data?.url ||
+    data?.document?.file_url ||
+    data?.document?.url;
+
+  const handleUpload = async (e) => {
     e.preventDefault();
 
     if (!title || !file) {
@@ -14,20 +23,30 @@ export default function UploadDocument() {
       return;
     }
 
-    const newDoc = {
-      title: title,
-      file: URL.createObjectURL(file)
-    };
+    setIsUploading(true);
 
-    const existingDocs = JSON.parse(localStorage.getItem("documents")) || [];
-    existingDocs.push(newDoc);
+    try {
+      const data = await uploadDocument({ title, file });
+      const newDoc = {
+        title: title,
+        file: getUploadedFileUrl(data) || URL.createObjectURL(file)
+      };
 
-    localStorage.setItem("documents", JSON.stringify(existingDocs));
+      const existingDocs = JSON.parse(localStorage.getItem("documents")) || [];
+      existingDocs.push(newDoc);
 
-    alert("Document Uploaded Successfully");
+      localStorage.setItem("documents", JSON.stringify(existingDocs));
 
-    setTitle("");
-    setFile(null);
+      alert("Document Uploaded Successfully");
+
+      setTitle("");
+      setFile(null);
+      e.target.reset();
+    } catch (error) {
+      alert(error.message || "Upload failed. Please try again later.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -69,9 +88,10 @@ export default function UploadDocument() {
 
           <button
             type="submit"
+            disabled={isUploading}
             className="glass-button w-full text-center"
           >
-            Upload Document
+            {isUploading ? "Uploading..." : "Upload Document"}
           </button>
 
         </form>

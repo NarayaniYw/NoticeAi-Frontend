@@ -1,14 +1,12 @@
 import Navbar from "../components/Navbar";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function EditDocuments() {
 
-  const [docs, setDocs] = useState([]);
-
-  useEffect(() => {
+  const [docs, setDocs] = useState(() => {
     const storedDocs = JSON.parse(localStorage.getItem("documents")) || [];
-    setDocs(storedDocs);
-  }, []);
+    return storedDocs;
+  });
 
   const deleteDoc = (index) => {
 

@@ -1,14 +1,12 @@
 import Navbar from "../components/Navbar";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 export default function AllDocuments() {
 
-  const [docs, setDocs] = useState([]);
-
-  useEffect(() => {
+  const [docs] = useState(() => {
     const storedDocs = JSON.parse(localStorage.getItem("documents")) || [];
-    setDocs(storedDocs);
-  }, []);
+    return storedDocs;
+  });
 
   return (
     <div className="min-h-screen flex flex-col text-white">

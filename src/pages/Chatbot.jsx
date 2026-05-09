@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Navbar from "../components/Navbar";
+import { ApiError, queryAssistant } from "../services/api";
 
 export default function Chatbot() {
 
@@ -7,6 +8,7 @@ export default function Chatbot() {
   const [input, setInput] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [history, setHistory] = useState([]);
+  const [isSending, setIsSending] = useState(false);
 
   const chatEndRef = useRef(null);
 
@@ -14,30 +16,62 @@ export default function Chatbot() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const sendMessage = () => {
+  const getAnswerText = (data) =>
+    data?.answer ||
+    data?.response ||
+    data?.message ||
+    data?.result ||
+    "I found a response, but it did not include an answer field.";
+
+  const getDocumentLink = (data) => {
+    const source = data?.document || data?.source || data?.file || data?.link || data?.sources?.[0];
+
+    if (!source) return null;
+    if (typeof source === "string") return source;
+
+    return source.url || source.file || source.link || source.title || null;
+  };
+
+  const sendMessage = async () => {
 
     if (!input.trim()) return;
 
+    const query = input.trim();
     const userMsg = {
       type: "user",
-      text: input,
+      text: query,
       time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     };
 
-    const aiMsg = {
-      type: "ai",
-      text: "Here is a related notice for your query:",
-      link: "MidSemSchedule.pdf",
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-    };
-
-    const updatedMessages = [...messages, userMsg, aiMsg];
-
-    setMessages(updatedMessages);
+    setMessages((currentMessages) => [...currentMessages, userMsg]);
     setInput("");
+    setIsSending(true);
 
     if (messages.length === 0) {
-      setHistory([...history, input]);
+      setHistory([...history, query]);
+    }
+
+    try {
+      const data = await queryAssistant(query);
+      const aiMsg = {
+        type: "ai",
+        text: getAnswerText(data),
+        link: getDocumentLink(data),
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+
+      setMessages((currentMessages) => [...currentMessages, aiMsg]);
+    } catch (error) {
+      const statusText = error instanceof ApiError && error.status ? ` (${error.status})` : "";
+      const errorMsg = {
+        type: "ai",
+        text: `${error.message || "Unable to reach SmartDocAI right now."}${statusText}`,
+        time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      };
+
+      setMessages((currentMessages) => [...currentMessages, errorMsg]);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -207,15 +241,22 @@ export default function Chatbot() {
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                sendMessage();
+              }
+            }}
             placeholder="Ask SmartDocAI anything..."
+            disabled={isSending}
             className="flex-1 bg-transparent outline-none text-white placeholder-gray-400"
           />
 
           <button
             onClick={sendMessage}
+            disabled={isSending}
             className="glass-button"
           >
-            ➤
+            {isSending ? "..." : "➤"}
           </button>
 
         </div>

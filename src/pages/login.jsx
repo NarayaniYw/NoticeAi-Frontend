@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ApiError, loginWithBackend, saveAuthSession } from "../services/api";
 
 export default function Login() {
 
@@ -7,40 +8,56 @@ export default function Login() {
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // sample credentials
   const USER_CREDENTIALS = { username: "user", password: "123" };
   const ADMIN_CREDENTIALS = { username: "admin", password: "123" };
 
-  const loginUser = () => {
-    if (!username || !password) {
-      alert("Please enter username and password");
-      return;
-    }
+  const getDashboardRoute = (role) => (role === "admin" ? "/admin" : "/home");
 
-    if (
-      username === USER_CREDENTIALS.username &&
-      password === USER_CREDENTIALS.password
-    ) {
-      navigate("/home");
-    } else {
-      alert("Invalid user credentials");
-    }
+  const canUseLocalCredentials = (role) => {
+    const credentials = role === "admin" ? ADMIN_CREDENTIALS : USER_CREDENTIALS;
+
+    return username === credentials.username && password === credentials.password;
   };
 
-  const loginAdmin = () => {
+  const shouldUseLocalFallback = (error) =>
+    error instanceof ApiError && (!error.status || error.status === 404 || error.status >= 500);
+
+  const login = async (role) => {
     if (!username || !password) {
       alert("Please enter username and password");
       return;
     }
 
-    if (
-      username === ADMIN_CREDENTIALS.username &&
-      password === ADMIN_CREDENTIALS.password
-    ) {
-      navigate("/admin");
-    } else {
-      alert("Invalid admin credentials");
+    setIsLoggingIn(true);
+
+    try {
+      const session = await loginWithBackend({ username, password, role });
+
+      saveAuthSession({
+        role: session?.role || role,
+        token: session?.access_token || session?.token || null,
+        user: session?.user || { username },
+      });
+
+      navigate(getDashboardRoute(session?.role || role));
+    } catch (error) {
+      if (shouldUseLocalFallback(error) && canUseLocalCredentials(role)) {
+        saveAuthSession({
+          role,
+          token: null,
+          user: { username },
+        });
+
+        navigate(getDashboardRoute(role));
+        return;
+      }
+
+      alert(error.message || `Invalid ${role} credentials`);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -60,38 +77,47 @@ export default function Login() {
         </p>
 
         {/* Username */}
-        <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={(e)=>setUsername(e.target.value)}
-          className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
-        />
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e)=>setUsername(e.target.value)}
+            disabled={isLoggingIn}
+            className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
+          />
 
         {/* Password */}
         <input
           type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e)=>setPassword(e.target.value)}
-          className="w-full p-3 mb-6 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
-        />
+            placeholder="Password"
+            value={password}
+            onChange={(e)=>setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                login("user");
+              }
+            }}
+            disabled={isLoggingIn}
+            className="w-full p-3 mb-6 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
+          />
 
         {/* Buttons */}
         <div className="flex flex-col gap-3">
 
           <button
-            onClick={loginUser}
+            onClick={() => login("user")}
+            disabled={isLoggingIn}
             className="bg-blue-800 hover:bg-blue-900 p-3 rounded-lg font-semibold transition"
           >
-            Login as User
+            {isLoggingIn ? "Logging in..." : "Login as User"}
           </button>
 
           <button
-            onClick={loginAdmin}
+            onClick={() => login("admin")}
+            disabled={isLoggingIn}
             className="bg-blue-800 hover:bg-blue-900 p-3 rounded-lg font-semibold transition"
           >
-            Login as Admin
+            {isLoggingIn ? "Logging in..." : "Login as Admin"}
           </button>
 
         </div>
