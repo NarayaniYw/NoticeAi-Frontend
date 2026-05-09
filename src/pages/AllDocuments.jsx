@@ -1,12 +1,53 @@
 import Navbar from "../components/Navbar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getDocuments } from "../services/api";
 
 export default function AllDocuments() {
 
-  const [docs] = useState(() => {
-    const storedDocs = JSON.parse(localStorage.getItem("documents")) || [];
-    return storedDocs;
-  });
+  const [docs, setDocs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const normalizeDocuments = (data) => {
+    const documents = Array.isArray(data) ? data : data?.documents || data?.docs || data?.results || [];
+
+    return documents.map((doc) => ({
+      title: doc.title || doc.name || doc.originalname || doc.filename || "Untitled document",
+      file: doc.file || doc.file_url || doc.fileUrl || doc.url || doc.path || "#",
+    }));
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadDocuments = async () => {
+      try {
+        const data = await getDocuments();
+
+        if (isMounted) {
+          setDocs(normalizeDocuments(data));
+          setError("");
+        }
+      } catch (error) {
+        const storedDocs = JSON.parse(localStorage.getItem("documents")) || [];
+
+        if (isMounted) {
+          setDocs(storedDocs);
+          setError(error.message || "Unable to load documents from backend.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadDocuments();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col text-white">
@@ -24,7 +65,19 @@ export default function AllDocuments() {
       {/* Content */}
       <div className="p-8 max-w-5xl mx-auto w-full">
 
-        {docs.length === 0 && (
+        {isLoading && (
+          <div className="glass-card p-6 text-center text-gray-300">
+            Loading documents...
+          </div>
+        )}
+
+        {!isLoading && error && (
+          <div className="glass-card p-4 mb-4 text-center text-yellow-200">
+            {error}
+          </div>
+        )}
+
+        {!isLoading && docs.length === 0 && (
           <div className="glass-card p-6 text-center text-gray-300">
             No documents uploaded yet.
           </div>

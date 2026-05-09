@@ -157,6 +157,34 @@ export const uploadDocument = ({ title, file }) => {
   ], formData);
 };
 
+export const getDocuments = async () => {
+  let response;
+
+  try {
+    response = await fetch(`${API}/documents`, {
+      headers: {
+        ...defaultHeaders,
+        ...getAuthHeaders(),
+      },
+    });
+  } catch (error) {
+    throw new ApiError("Backend is unavailable. Please try again later.", {
+      body: error.message,
+    });
+  }
+
+  const data = await parseJsonResponse(response);
+
+  if (!response.ok) {
+    throw new ApiError(data?.detail || data?.message || `Documents request failed with status ${response.status}.`, {
+      status: response.status,
+      body: data,
+    });
+  }
+
+  return data;
+};
+
 export const saveAuthSession = (session) => {
   localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
 };
