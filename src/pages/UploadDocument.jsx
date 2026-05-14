@@ -7,6 +7,8 @@ export default function UploadDocument() {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
 
   const getUploadedFileUrl = (data) =>
     data?.file_url ||
@@ -19,31 +21,26 @@ export default function UploadDocument() {
     e.preventDefault();
 
     if (!title || !file) {
-      alert("Please fill all fields");
+      setError("Please enter a title and choose a file.");
+      setStatus("");
       return;
     }
 
     setIsUploading(true);
+    setError("");
+    setStatus("Uploading document...");
 
     try {
       const data = await uploadDocument({ title, file });
-      const newDoc = {
-        title: title,
-        file: getUploadedFileUrl(data) || URL.createObjectURL(file)
-      };
+      const uploadedUrl = getUploadedFileUrl(data);
 
-      const existingDocs = JSON.parse(localStorage.getItem("documents")) || [];
-      existingDocs.push(newDoc);
-
-      localStorage.setItem("documents", JSON.stringify(existingDocs));
-
-      alert("Document Uploaded Successfully");
-
+      setStatus(uploadedUrl ? "Document uploaded successfully." : "Document uploaded successfully. It will appear once the backend returns it in the documents list.");
       setTitle("");
       setFile(null);
       e.target.reset();
     } catch (error) {
-      alert(error.message || "Upload failed. Please try again later.");
+      setError(error.message || "Upload failed. Please try again later.");
+      setStatus("");
     } finally {
       setIsUploading(false);
     }
@@ -83,8 +80,21 @@ export default function UploadDocument() {
           <input
             type="file"
             onChange={(e) => setFile(e.target.files[0])}
+            disabled={isUploading}
             className="glass-input w-full"
           />
+
+          {error && (
+            <p className="rounded-lg border border-red-300/30 bg-red-500/20 p-3 text-sm text-red-100">
+              {error}
+            </p>
+          )}
+
+          {status && (
+            <p className="rounded-lg border border-blue-300/30 bg-blue-500/20 p-3 text-sm text-blue-100">
+              {status}
+            </p>
+          )}
 
           <button
             type="submit"

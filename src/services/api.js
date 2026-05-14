@@ -1,20 +1,32 @@
-export const API = import.meta.env.VITE_API_URL || "https://smartdoc-ai-si4n.onrender.com";
+export const API = import.meta.env.VITE_API_URL;
 
 const defaultHeaders = {
   "Content-Type": "application/json",
 };
 
+const AUTH_STORAGE_KEY = "smartdoc_auth";
+
 export class ApiError extends Error {
-  constructor(message, { status, body } = {}) {
+  constructor(message, { status, body, cause } = {}) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.body = body;
+    this.cause = cause;
   }
 }
 
-const buildUrl = (path) => `${API}${path.startsWith("/") ? path : `/${path}`}`;
-const AUTH_STORAGE_KEY = "smartdoc_auth";
+const normalizeApiBase = (baseUrl) => baseUrl?.replace(/\/+$/, "");
+
+const buildUrl = (path) => {
+  const baseUrl = normalizeApiBase(API);
+
+  if (!baseUrl) {
+    throw new ApiError("Missing VITE_API_URL. Add it to the Render frontend environment.");
+  }
+
+  return `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
+};
 
 const getAuthToken = () => getAuthSession()?.token;
 
@@ -41,6 +53,30 @@ const parseJsonResponse = async (response) => {
   }
 };
 
+const getHttpErrorMessage = (response, data, fallbackAction = "Request") => {
+  const backendMessage = data?.detail || data?.message || data?.error;
+
+  if (backendMessage) return backendMessage;
+  if (response.status === 404) return "Backend endpoint was not found. Please check the deployed API routes.";
+  if (response.status >= 500) return "Backend server error. Please try again after a moment.";
+  if (response.status === 401) return "Your session has expired. Please log in again.";
+  if (response.status === 403) return "You do not have permission to perform this action.";
+
+  return `${fallbackAction} failed with status ${response.status}.`;
+};
+
+const getNetworkErrorMessage = (error) => {
+  if (!navigator.onLine) {
+    return "You appear to be offline. Check your internet connection and try again.";
+  }
+
+  if (error instanceof TypeError) {
+    return "Could not reach the backend. This can happen if the server is down or CORS is not allowing this frontend.";
+  }
+
+  return "Backend is unavailable. Please try again later.";
+};
+
 export const requestJson = async (path, options = {}) => {
   let response;
 
@@ -54,40 +90,22 @@ export const requestJson = async (path, options = {}) => {
       },
     });
   } catch (error) {
-    throw new ApiError("Backend is unavailable. Please try again later.", {
+    throw new ApiError(getNetworkErrorMessage(error), {
       body: error.message,
+      cause: error,
     });
   }
 
   const data = await parseJsonResponse(response);
 
   if (!response.ok) {
-    throw new ApiError(data?.detail || data?.message || `Request failed with status ${response.status}.`, {
+    throw new ApiError(getHttpErrorMessage(response, data), {
       status: response.status,
       body: data,
     });
   }
 
   return data;
-};
-
-const requestFirstAvailable = async (paths, options) => {
-  let notFoundError;
-
-  for (const path of paths) {
-    try {
-      return await requestJson(path, options);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        notFoundError = error;
-        continue;
-      }
-
-      throw error;
-    }
-  }
-
-  throw notFoundError || new ApiError("No matching backend endpoint was found.");
 };
 
 export const uploadForm = async (path, formData) => {
@@ -102,15 +120,16 @@ export const uploadForm = async (path, formData) => {
       body: formData,
     });
   } catch (error) {
-    throw new ApiError("Backend is unavailable. Please try again later.", {
+    throw new ApiError(getNetworkErrorMessage(error), {
       body: error.message,
+      cause: error,
     });
   }
 
   const data = await parseJsonResponse(response);
 
   if (!response.ok) {
-    throw new ApiError(data?.detail || data?.message || `Upload failed with status ${response.status}.`, {
+    throw new ApiError(getHttpErrorMessage(response, data, "Upload"), {
       status: response.status,
       body: data,
     });
@@ -119,27 +138,8 @@ export const uploadForm = async (path, formData) => {
   return data;
 };
 
-const uploadFirstAvailable = async (paths, formData) => {
-  let notFoundError;
-
-  for (const path of paths) {
-    try {
-      return await uploadForm(path, formData);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        notFoundError = error;
-        continue;
-      }
-
-      throw error;
-    }
-  }
-
-  throw notFoundError || new ApiError("No matching upload endpoint was found.");
-};
-
 export const queryAssistant = (query) =>
-  requestFirstAvailable(["/query", "/api/query"], {
+  requestJson("/query", {
     method: "POST",
     body: JSON.stringify({ query }),
   });
@@ -149,40 +149,7 @@ export const uploadDocument = ({ title, file }) => {
   formData.append("title", title);
   formData.append("file", file);
 
-  return uploadFirstAvailable([
-    "/upload",
-    "/documents/upload",
-    "/api/upload",
-    "/api/documents/upload",
-  ], formData);
-};
-
-export const getDocuments = async () => {
-  let response;
-
-  try {
-    response = await fetch(`${API}/documents`, {
-      headers: {
-        ...defaultHeaders,
-        ...getAuthHeaders(),
-      },
-    });
-  } catch (error) {
-    throw new ApiError("Backend is unavailable. Please try again later.", {
-      body: error.message,
-    });
-  }
-
-  const data = await parseJsonResponse(response);
-
-  if (!response.ok) {
-    throw new ApiError(data?.detail || data?.message || `Documents request failed with status ${response.status}.`, {
-      status: response.status,
-      body: data,
-    });
-  }
-
-  return data;
+  return uploadForm("/upload", formData);
 };
 
 export const saveAuthSession = (session) => {
@@ -202,27 +169,15 @@ export const clearAuthSession = () => {
 };
 
 export const loginWithBackend = ({ username, password, role }) =>
-  requestFirstAvailable([
-    "/login",
-    "/auth/login",
-    "/api/login",
-    "/api/auth/login",
-  ], {
+  requestJson("/login", {
     method: "POST",
     body: JSON.stringify({ username, password, role }),
   });
 
 export const registerWithBackend = ({ username, email, password, role }) =>
-  requestFirstAvailable([
-    "/signup",
-    "/auth/signup",
-    "/api/signup",
-    "/api/auth/signup",
-    "/register",
-    "/auth/register",
-    "/api/register",
-    "/api/auth/register",
-  ], {
+  requestJson("/register", {
     method: "POST",
     body: JSON.stringify({ username, email, password, role }),
   });
+
+export const getDocuments = () => requestJson("/documents");

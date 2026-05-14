@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ApiError, loginWithBackend, saveAuthSession } from "../services/api";
+import { loginWithBackend, saveAuthSession } from "../services/api";
 
 export default function Login() {
 
@@ -9,53 +9,31 @@ export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-
-  // sample credentials
-  const USER_CREDENTIALS = { username: "user", password: "123" };
-  const ADMIN_CREDENTIALS = { username: "admin", password: "123" };
+  const [error, setError] = useState("");
 
   const getDashboardRoute = (role) => (role === "admin" ? "/admin" : "/home");
 
-  const canUseLocalCredentials = (role) => {
-    const credentials = role === "admin" ? ADMIN_CREDENTIALS : USER_CREDENTIALS;
-
-    return username === credentials.username && password === credentials.password;
-  };
-
-  const shouldUseLocalFallback = (error) =>
-    error instanceof ApiError && (!error.status || error.status === 404 || error.status >= 500);
-
   const login = async (role) => {
     if (!username || !password) {
-      alert("Please enter username and password");
+      setError("Please enter username and password.");
       return;
     }
 
     setIsLoggingIn(true);
+    setError("");
 
     try {
       const session = await loginWithBackend({ username, password, role });
 
       saveAuthSession({
         role: session?.role || role,
-        token: session?.access_token || session?.token || null,
+        token: session?.access_token || session?.accessToken || session?.token || session?.jwt || null,
         user: session?.user || { username },
       });
 
       navigate(getDashboardRoute(session?.role || role));
     } catch (error) {
-      if (shouldUseLocalFallback(error) && canUseLocalCredentials(role)) {
-        saveAuthSession({
-          role,
-          token: null,
-          user: { username },
-        });
-
-        navigate(getDashboardRoute(role));
-        return;
-      }
-
-      alert(error.message || `Invalid ${role} credentials`);
+      setError(error.message || `Invalid ${role} credentials.`);
     } finally {
       setIsLoggingIn(false);
     }
@@ -100,6 +78,12 @@ export default function Login() {
             disabled={isLoggingIn}
             className="w-full p-3 mb-6 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
           />
+
+        {error && (
+          <p className="mb-4 rounded-lg border border-red-300/30 bg-red-500/20 p-3 text-sm text-red-100">
+            {error}
+          </p>
+        )}
 
         {/* Buttons */}
         <div className="flex flex-col gap-3">

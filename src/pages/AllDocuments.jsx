@@ -29,10 +29,8 @@ export default function AllDocuments() {
           setError("");
         }
       } catch (error) {
-        const storedDocs = JSON.parse(localStorage.getItem("documents")) || [];
-
         if (isMounted) {
-          setDocs(storedDocs);
+          setDocs([]);
           setError(error.message || "Unable to load documents from backend.");
         }
       } finally {

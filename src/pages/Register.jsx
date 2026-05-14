@@ -11,28 +11,35 @@ export default function Register() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("user");
   const [isRegistering, setIsRegistering] = useState(false);
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
 
   const register = async (e) => {
     e.preventDefault();
 
     if (!username || !email || !password || !confirmPassword) {
-      alert("Please fill all fields");
+      setError("Please fill all fields.");
+      setStatus("");
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      setError("Passwords do not match.");
+      setStatus("");
       return;
     }
 
     setIsRegistering(true);
+    setError("");
+    setStatus("Creating your account...");
 
     try {
       await registerWithBackend({ username, email, password, role });
-      alert("Registration successful. Please login.");
+      setStatus("Registration successful. Redirecting to login...");
       navigate("/");
     } catch (error) {
-      alert(error.message || "Registration failed. Please try again.");
+      setError(error.message || "Registration failed. Please try again.");
+      setStatus("");
     } finally {
       setIsRegistering(false);
     }
@@ -94,6 +101,18 @@ export default function Register() {
           disabled={isRegistering}
           className="w-full p-3 mb-6 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
         />
+
+        {error && (
+          <p className="mb-4 rounded-lg border border-red-300/30 bg-red-500/20 p-3 text-sm text-red-100">
+            {error}
+          </p>
+        )}
+
+        {status && (
+          <p className="mb-4 rounded-lg border border-blue-300/30 bg-blue-500/20 p-3 text-sm text-blue-100">
+            {status}
+          </p>
+        )}
 
         <button
           type="submit"
