@@ -139,7 +139,7 @@ export const uploadForm = async (path, formData) => {
 };
 
 export const queryAssistant = (query) =>
-  requestJson("/query", {
+  requestJson("/api/query", {
     method: "POST",
     body: JSON.stringify({ query }),
   });
@@ -149,7 +149,7 @@ export const uploadDocument = ({ title, file }) => {
   formData.append("title", title);
   formData.append("file", file);
 
-  return uploadForm("/upload", formData);
+  return uploadForm("/api/documents/upload", formData);
 };
 
 export const saveAuthSession = (session) => {
@@ -169,15 +169,15 @@ export const clearAuthSession = () => {
 };
 
 export const loginWithBackend = ({ username, password, role }) =>
-  requestJson("/login", {
+  requestJson("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ username, password, role }),
   });
 
 export const registerWithBackend = ({ username, email, password, role }) =>
-  requestJson("/register", {
+  requestJson("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify({ username, email, password, role }),
+    body: JSON.stringify({ username, email, password }),
   });
 
-export const getDocuments = () => requestJson("/documents");
+export const getDocuments = () => requestJson("/api/documents");
