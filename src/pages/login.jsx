@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginWithBackend, saveAuthSession } from "../services/api";
+import { loginLocally, saveAuthSession } from "../services/api";
 
 export default function Login() {
 
   const navigate = useNavigate();
 
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [error, setError] = useState("");
@@ -14,8 +14,8 @@ export default function Login() {
   const getDashboardRoute = (role) => (role === "admin" ? "/admin" : "/home");
 
   const login = async (role) => {
-    if (!username || !password) {
-      setError("Please enter username and password.");
+    if (!email || !password) {
+      setError("Please enter email and password.");
       return;
     }
 
@@ -23,15 +23,15 @@ export default function Login() {
     setError("");
 
     try {
-      const session = await loginWithBackend({ username, password, role });
+      const session = loginLocally({ email, password, role });
 
       saveAuthSession({
-        role: session?.role || role,
-        token: session?.access_token || session?.accessToken || session?.token || session?.jwt || null,
-        user: session?.user || { username },
+        role: session.role,
+        token: session.token,
+        user: session.user,
       });
 
-      navigate(getDashboardRoute(session?.role || role));
+      navigate(getDashboardRoute(session.role));
     } catch (error) {
       setError(error.message || `Invalid ${role} credentials.`);
     } finally {
@@ -54,12 +54,12 @@ export default function Login() {
           Intelligent Campus Document Assistant
         </p>
 
-        {/* Username */}
+        {/* Email */}
           <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e)=>setUsername(e.target.value)}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e)=>setEmail(e.target.value)}
             disabled={isLoggingIn}
             className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
           />

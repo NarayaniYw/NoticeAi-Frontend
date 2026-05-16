@@ -28,6 +28,8 @@ const buildUrl = (path) => {
   return `${baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
 };
 
+export const buildApiUrl = (path) => buildUrl(path);
+
 const getAuthToken = () => getAuthSession()?.token;
 
 const getAuthHeaders = () => {
@@ -141,12 +143,15 @@ export const uploadForm = async (path, formData) => {
 export const queryAssistant = (query) =>
   requestJson("/api/query", {
     method: "POST",
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ question: query }),
   });
 
-export const uploadDocument = ({ title, file }) => {
+export const uploadDocument = ({ title, uploadedBy, file }) => {
   const formData = new FormData();
   formData.append("title", title);
+  if (uploadedBy) {
+    formData.append("uploadedBy", uploadedBy);
+  }
   formData.append("file", file);
 
   return uploadForm("/api/documents/upload", formData);
@@ -168,16 +173,30 @@ export const clearAuthSession = () => {
   localStorage.removeItem(AUTH_STORAGE_KEY);
 };
 
-export const loginWithBackend = ({ username, password, role }) =>
-  requestJson("/api/auth/login", {
-    method: "POST",
-    body: JSON.stringify({ username, password, role }),
-  });
+export const loginLocally = ({ email, password, role }) => {
+  if (!email || !password) {
+    throw new ApiError("Please enter email and password.");
+  }
 
-export const registerWithBackend = ({ username, email, password, role }) =>
-  requestJson("/api/auth/register", {
-    method: "POST",
-    body: JSON.stringify({ username, email, password }),
-  });
+  return {
+    role,
+    token: null,
+    user: {
+      email,
+      username: email.split("@")[0] || "User",
+    },
+  };
+};
+
+export const registerLocally = ({ username, email, password }) => {
+  if (!username || !email || !password) {
+    throw new ApiError("Please fill all required fields.");
+  }
+
+  return {
+    success: true,
+    user: { username, email },
+  };
+};
 
 export const getDocuments = () => requestJson("/api/documents");

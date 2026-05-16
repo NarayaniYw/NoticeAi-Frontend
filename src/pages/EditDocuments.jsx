@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
-import { getDocuments } from "../services/api";
+import { buildApiUrl, getDocuments } from "../services/api";
 
 export default function EditDocuments() {
 
@@ -9,11 +9,14 @@ export default function EditDocuments() {
   const [error, setError] = useState("");
 
   const normalizeDocuments = (data) => {
-    const documents = Array.isArray(data) ? data : data?.documents || data?.docs || data?.results || [];
+    const documents = Array.isArray(data) ? data : data?.data || data?.documents || data?.docs || data?.results || [];
 
     return documents.map((doc) => ({
+      id: doc._id || doc.id || doc.fileName || doc.title,
       title: doc.title || doc.name || doc.originalname || doc.filename || "Untitled document",
-      file: doc.file || doc.file_url || doc.fileUrl || doc.url || doc.path || "#",
+      uploadedBy: doc.uploadedBy || "anonymous",
+      uploadedAt: doc.createdAt ? new Date(doc.createdAt).toLocaleString() : "",
+      file: doc.file || doc.file_url || doc.fileUrl || doc.url || doc.path || (doc.fileName ? buildApiUrl(`/uploads/${encodeURIComponent(doc.fileName)}`) : "#"),
     }));
   };
 
@@ -48,14 +51,6 @@ export default function EditDocuments() {
       isMounted = false;
     };
   }, []);
-
-  const deleteDoc = (index) => {
-
-    const updatedDocs = docs.filter((_, i) => i !== index);
-
-    setDocs(updatedDocs);
-    localStorage.setItem("documents", JSON.stringify(updatedDocs));
-  };
 
   return (
     <div className="min-h-screen flex flex-col text-white">
@@ -95,13 +90,18 @@ export default function EditDocuments() {
 
         {docs.map((doc, index) => (
           <div
-            key={index}
+            key={doc.id || index}
             className="glass-card p-5 mb-4 flex justify-between items-center hover:scale-[1.01] transition"
           >
 
-            <p className="font-medium">
-              {doc.title}
-            </p>
+            <div>
+              <p className="font-medium">
+                {doc.title}
+              </p>
+              <p className="text-sm text-gray-300">
+                Uploaded by {doc.uploadedBy}{doc.uploadedAt ? ` on ${doc.uploadedAt}` : ""}
+              </p>
+            </div>
 
             <div className="flex gap-3">
 
@@ -114,12 +114,9 @@ export default function EditDocuments() {
                 View
               </a>
 
-              <button
-                onClick={() => deleteDoc(index)}
-                className="bg-red-500 px-4 py-2 rounded-lg text-sm hover:bg-red-600 transition"
-              >
-                Delete
-              </button>
+              <span className="px-4 py-2 rounded-lg text-sm bg-white/10 text-gray-300">
+                Backend has no delete route
+              </span>
 
             </div>
 

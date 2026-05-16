@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Navbar from "../components/Navbar";
-import { uploadDocument } from "../services/api";
+import { getAuthSession, uploadDocument } from "../services/api";
 
 export default function UploadDocument() {
 
@@ -14,6 +14,8 @@ export default function UploadDocument() {
     data?.file_url ||
     data?.fileUrl ||
     data?.url ||
+    data?.data?.fileUrl ||
+    data?.data?.url ||
     data?.document?.file_url ||
     data?.document?.url;
 
@@ -31,7 +33,8 @@ export default function UploadDocument() {
     setStatus("Uploading document...");
 
     try {
-      const data = await uploadDocument({ title, file });
+      const uploadedBy = getAuthSession()?.user?.username || getAuthSession()?.user?.email || "anonymous";
+      const data = await uploadDocument({ title, uploadedBy, file });
       const uploadedUrl = getUploadedFileUrl(data);
 
       setStatus(uploadedUrl ? "Document uploaded successfully." : "Document uploaded successfully. It will appear once the backend returns it in the documents list.");

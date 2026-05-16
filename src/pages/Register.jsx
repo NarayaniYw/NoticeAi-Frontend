@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerWithBackend } from "../services/api";
+import { registerLocally } from "../services/api";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -34,7 +34,7 @@ export default function Register() {
     setStatus("Creating your account...");
 
     try {
-      await registerWithBackend({ username, email, password, role });
+      registerLocally({ username, email, password, role });
       setStatus("Registration successful. Redirecting to login...");
       navigate("/");
     } catch (error) {

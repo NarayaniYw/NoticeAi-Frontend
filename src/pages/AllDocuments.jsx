@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
-import { getDocuments } from "../services/api";
+import { buildApiUrl, getDocuments } from "../services/api";
 
 export default function AllDocuments() {
 
@@ -9,11 +9,14 @@ export default function AllDocuments() {
   const [error, setError] = useState("");
 
   const normalizeDocuments = (data) => {
-    const documents = Array.isArray(data) ? data : data?.documents || data?.docs || data?.results || [];
+    const documents = Array.isArray(data) ? data : data?.data || data?.documents || data?.docs || data?.results || [];
 
     return documents.map((doc) => ({
+      id: doc._id || doc.id || doc.fileName || doc.title,
       title: doc.title || doc.name || doc.originalname || doc.filename || "Untitled document",
-      file: doc.file || doc.file_url || doc.fileUrl || doc.url || doc.path || "#",
+      uploadedBy: doc.uploadedBy || "anonymous",
+      uploadedAt: doc.createdAt ? new Date(doc.createdAt).toLocaleString() : "",
+      file: doc.file || doc.file_url || doc.fileUrl || doc.url || doc.path || (doc.fileName ? buildApiUrl(`/uploads/${encodeURIComponent(doc.fileName)}`) : "#"),
     }));
   };
 
@@ -83,10 +86,15 @@ export default function AllDocuments() {
 
         {docs.map((doc, index) => (
           <div
-            key={index}
+            key={doc.id || index}
             className="glass-card p-5 mb-4 flex justify-between items-center hover:scale-[1.01] transition"
           >
-            <p className="font-medium">{doc.title}</p>
+            <div>
+              <p className="font-medium">{doc.title}</p>
+              <p className="text-sm text-gray-300">
+                Uploaded by {doc.uploadedBy}{doc.uploadedAt ? ` on ${doc.uploadedAt}` : ""}
+              </p>
+            </div>
 
             <a
               href={doc.file}
