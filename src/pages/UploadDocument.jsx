@@ -77,7 +77,7 @@ export default function UploadDocument() {
             placeholder="Document Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="glass-input w-full"
+            className="glass-input w-full text-red-500 placeholder-red-300"
           />
 
           <input
