@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { login as apiLogin, saveAuthSession } from "../services/api";
 
 export default function Login() {
-
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
@@ -13,25 +12,37 @@ export default function Login() {
 
   const getDashboardRoute = (role) => (role === "admin" ? "/admin" : "/home");
 
-  const login = async (role) => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
     if (!email || !password) {
       setError("Please enter email and password.");
       return;
     }
+
     setIsLoggingIn(true);
     setError("");
+
     try {
-      // Call API login
       const data = await apiLogin({ email, password });
-      // Save token and user info
+      const token = data.token || data.data?.token;
+      const user = data.user || data.data?.user;
+      const role = user?.role || "user";
+
+      if (!token || !user) {
+        setError("Login response did not include a valid session.");
+        return;
+      }
+
       saveAuthSession({
-        role: data.user?.role || role,
-        token: data.token,
-        user: data.user,
+        role,
+        token,
+        user,
       });
-      navigate(getDashboardRoute(data.user?.role || role));
+
+      navigate(getDashboardRoute(role));
     } catch (error) {
-      setError(error.message || `Invalid credentials.`);
+      setError(error.message || "Invalid credentials.");
     } finally {
       setIsLoggingIn(false);
     }
@@ -39,11 +50,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center text-white">
-
-      {/* Login Card */}
-      <div className="glass-card w-[380px] p-8">
-
-        {/* Title */}
+      <form onSubmit={handleLogin} className="glass-card w-[380px] p-8">
         <h1 className="text-4xl font-bold text-center mb-2">
           SmartDocAI
         </h1>
@@ -52,30 +59,23 @@ export default function Login() {
           Intelligent Campus Document Assistant
         </p>
 
-        {/* Email */}
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e)=>setEmail(e.target.value)}
-            disabled={isLoggingIn}
-            className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
-          />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={isLoggingIn}
+          className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
+        />
 
-        {/* Password */}
         <input
           type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e)=>setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                login("user");
-              }
-            }}
-            disabled={isLoggingIn}
-            className="w-full p-3 mb-6 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
-          />
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={isLoggingIn}
+          className="w-full p-3 mb-6 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
+        />
 
         {error && (
           <p className="mb-4 rounded-lg border border-red-300/30 bg-red-500/20 p-3 text-sm text-red-100">
@@ -83,26 +83,13 @@ export default function Login() {
           </p>
         )}
 
-        {/* Buttons */}
-        <div className="flex flex-col gap-3">
-
-          <button
-            onClick={() => login("user")}
-            disabled={isLoggingIn}
-            className="bg-blue-800 hover:bg-blue-900 p-3 rounded-lg font-semibold transition"
-          >
-            {isLoggingIn ? "Logging in..." : "Login as User"}
-          </button>
-
-          <button
-            onClick={() => login("admin")}
-            disabled={isLoggingIn}
-            className="bg-blue-800 hover:bg-blue-900 p-3 rounded-lg font-semibold transition"
-          >
-            {isLoggingIn ? "Logging in..." : "Login as Admin"}
-          </button>
-
-        </div>
+        <button
+          type="submit"
+          disabled={isLoggingIn}
+          className="bg-blue-800 hover:bg-blue-900 p-3 rounded-lg font-semibold transition w-full"
+        >
+          {isLoggingIn ? "Logging in..." : "Login"}
+        </button>
 
         <p className="text-center text-gray-300 text-sm mt-6">
           New to SmartDocAI?{" "}
@@ -110,9 +97,7 @@ export default function Login() {
             Register
           </Link>
         </p>
-
-      </div>
-
+      </form>
     </div>
   );
 }

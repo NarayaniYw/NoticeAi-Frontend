@@ -9,7 +9,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import UploadDocument from "./pages/UploadDocument";
 import AllDocuments from "./pages/AllDocuments";
 import EditDocuments from "./pages/EditDocuments";
-import SuspiciousUsers from "./pages/SuspiciousUsers";
 
 function App() {
   return (
@@ -26,7 +25,6 @@ function App() {
         <Route path="/upload" element={<UploadDocument />} />
         <Route path="/documents" element={<AllDocuments />} />
         <Route path="/edit-docs" element={<EditDocuments />} />
-        <Route path="/suspicious-users" element={<SuspiciousUsers />} />
         {/* fallback or catch-all could be added here */}
       </Routes>
     </HashRouter>

@@ -122,14 +122,15 @@ export const requestJson = async (path, options = {}) => {
   return data;
 };
 
-export const uploadForm = async (path, formData) => {
+export const requestForm = async (path, formData, options = {}) => {
   let response;
 
   try {
     response = await fetch(buildUrl(path), {
-      method: "POST",
+      method: options.method || "POST",
       headers: {
         ...getAuthHeaders(),
+        ...options.headers,
       },
       body: formData,
     });
@@ -151,6 +152,9 @@ export const uploadForm = async (path, formData) => {
 
   return data;
 };
+
+export const uploadForm = (path, formData) =>
+  requestForm(path, formData, { method: "POST" });
 
 export const queryAssistant = (query) =>
   requestJson("/api/query", {
@@ -219,3 +223,38 @@ export const getMe = async () => {
 };
 
 export const getDocuments = () => requestJson("/api/documents");
+
+export const getAdminUsers = (status = "") => {
+  const query = status ? `?status=${encodeURIComponent(status)}` : "";
+  return requestJson(`/api/admin/users${query}`);
+};
+
+export const suspendAdminUser = (id) =>
+  requestJson(`/api/admin/users/${id}/suspend`, {
+    method: "PATCH",
+  });
+
+export const activateAdminUser = (id) =>
+  requestJson(`/api/admin/users/${id}/activate`, {
+    method: "PATCH",
+  });
+
+export const deleteAdminDocument = (id) =>
+  requestJson(`/api/admin/documents/${id}`, {
+    method: "DELETE",
+  });
+
+export const updateAdminDocument = ({ id, title, uploadedBy, file }) => {
+  const formData = new FormData();
+
+  formData.append("title", title);
+  formData.append("uploadedBy", uploadedBy);
+
+  if (file) {
+    formData.append("file", file);
+  }
+
+  return requestForm(`/api/admin/documents/${id}`, formData, {
+    method: "PATCH",
+  });
+};

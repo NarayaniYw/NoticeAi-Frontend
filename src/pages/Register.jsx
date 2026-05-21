@@ -81,7 +81,6 @@ export default function Register() {
           className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white"
         >
           <option className="text-black" value="user">User</option>
-          <option className="text-black" value="admin">Admin</option>
         </select>
 
         <input
