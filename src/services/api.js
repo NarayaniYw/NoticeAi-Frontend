@@ -4,7 +4,9 @@ const defaultHeaders = {
   "Content-Type": "application/json",
 };
 
-const AUTH_STORAGE_KEY = "smartdoc_auth";
+const LEGACY_AUTH_STORAGE_KEY = "smartdoc_auth";
+const TOKEN_STORAGE_KEY = "token";
+const USER_STORAGE_KEY = "user";
 
 export class ApiError extends Error {
   constructor(message, { status, body, cause } = {}) {
@@ -79,6 +81,15 @@ const getHttpErrorMessage = (response, data, fallbackAction = "Request") => {
   return `${fallbackAction} failed with status ${response.status}.`;
 };
 
+const redirectToLoginForAuthError = (message) => {
+  clearAuthSession();
+  sessionStorage.setItem("auth_error", message);
+
+  if (window.location.hash !== "#/") {
+    window.location.hash = "#/";
+  }
+};
+
 const getNetworkErrorMessage = (error) => {
   if (!navigator.onLine) {
     return "You appear to be offline. Check your internet connection and try again.";
@@ -113,7 +124,13 @@ export const requestJson = async (path, options = {}) => {
   const data = await parseJsonResponse(response);
 
   if (!response.ok) {
-    throw new ApiError(getHttpErrorMessage(response, data), {
+    const message = getHttpErrorMessage(response, data);
+
+    if (response.status === 401 || response.status === 403) {
+      redirectToLoginForAuthError(message);
+    }
+
+    throw new ApiError(message, {
       status: response.status,
       body: data,
     });
@@ -144,7 +161,13 @@ export const requestForm = async (path, formData, options = {}) => {
   const data = await parseJsonResponse(response);
 
   if (!response.ok) {
-    throw new ApiError(getHttpErrorMessage(response, data, "Upload"), {
+    const message = getHttpErrorMessage(response, data, "Upload");
+
+    if (response.status === 401 || response.status === 403) {
+      redirectToLoginForAuthError(message);
+    }
+
+    throw new ApiError(message, {
       status: response.status,
       body: data,
     });
@@ -174,19 +197,41 @@ export const uploadDocument = ({ title, uploadedBy, file }) => {
 };
 
 export const saveAuthSession = (session) => {
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  localStorage.setItem(TOKEN_STORAGE_KEY, session.token);
+  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(session.user));
+  localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
 };
 
 export const getAuthSession = () => {
   try {
-    return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY));
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const user = JSON.parse(localStorage.getItem(USER_STORAGE_KEY));
+
+    if (token && user) {
+      return {
+        role: user.role,
+        token,
+        user,
+      };
+    }
+
+    const legacySession = JSON.parse(localStorage.getItem(LEGACY_AUTH_STORAGE_KEY));
+
+    if (legacySession?.token && legacySession?.user) {
+      saveAuthSession(legacySession);
+      return legacySession;
+    }
+
+    return null;
   } catch {
     return null;
   }
 };
 
 export const clearAuthSession = () => {
-  localStorage.removeItem(AUTH_STORAGE_KEY);
+  localStorage.removeItem(TOKEN_STORAGE_KEY);
+  localStorage.removeItem(USER_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_AUTH_STORAGE_KEY);
 };
 
 

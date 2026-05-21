@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { login as apiLogin, saveAuthSession } from "../services/api";
 
@@ -11,6 +11,15 @@ export default function Login() {
   const [error, setError] = useState("");
 
   const getDashboardRoute = (role) => (role === "admin" ? "/admin" : "/home");
+
+  useEffect(() => {
+    const authError = sessionStorage.getItem("auth_error");
+
+    if (authError) {
+      setError(authError);
+      sessionStorage.removeItem("auth_error");
+    }
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();

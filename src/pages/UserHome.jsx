@@ -1,11 +1,17 @@
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { getAuthSession } from "../services/api";
 
 export default function UserHome() {
 
   const navigate = useNavigate();
 
-  const username = "Nayu";
+  const session = getAuthSession();
+  const username =
+    session?.user?.username ||
+    session?.user?.name ||
+    session?.user?.email?.split("@")[0] ||
+    "User";
 
   const notices = [
     "Mid Sem Exam Schedule Released",

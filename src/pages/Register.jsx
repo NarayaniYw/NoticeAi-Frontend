@@ -9,7 +9,6 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState("user");
   const [isRegistering, setIsRegistering] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -34,7 +33,7 @@ export default function Register() {
     setStatus("Creating your account...");
 
     try {
-      await apiRegister({ username, email, password, role });
+      await apiRegister({ username, email, password, role: "user" });
       setStatus("Registration successful. Redirecting to login...");
       setTimeout(() => navigate("/"), 1200);
     } catch (error) {
@@ -73,15 +72,6 @@ export default function Register() {
           disabled={isRegistering}
           className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white placeholder-gray-300"
         />
-
-        <select
-          value={role}
-          onChange={(e) => setRole(e.target.value)}
-          disabled={isRegistering}
-          className="w-full p-3 mb-4 rounded-lg bg-white/10 border border-white/20 outline-none backdrop-blur text-white"
-        >
-          <option className="text-black" value="user">User</option>
-        </select>
 
         <input
           type="password"
