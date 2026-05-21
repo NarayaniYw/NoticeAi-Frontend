@@ -12,6 +12,7 @@ import {
   getDocuments,
   suspendAdminUser,
   updateAdminDocument,
+  uploadDocument,
 } from "../services/api";
 
 export default function AdminDashboard() {
@@ -24,6 +25,9 @@ export default function AdminDashboard() {
   const [actionId, setActionId] = useState("");
   const [editingId, setEditingId] = useState("");
   const [editForm, setEditForm] = useState({ title: "", uploadedBy: "", file: null });
+  const [uploadTitle, setUploadTitle] = useState("");
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploadInputKey, setUploadInputKey] = useState(0);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -55,6 +59,11 @@ export default function AdminDashboard() {
     uploadedAt: doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : "",
     file: getDocumentFileUrl(doc),
   });
+
+  const refreshDocuments = async () => {
+    const documentData = await getDocuments();
+    setDocuments(getItems(documentData).map(normalizeDocument));
+  };
 
   const loadAdminData = async () => {
     setIsLoading(true);
@@ -181,6 +190,39 @@ export default function AdminDashboard() {
     }
   };
 
+  const submitUpload = async (e) => {
+    e.preventDefault();
+
+    if (!uploadTitle || !uploadFile) {
+      setError("Please enter a title and choose a PDF file.");
+      setMessage("");
+      return;
+    }
+
+    setActionId("upload-document");
+    setError("");
+    setMessage("");
+
+    try {
+      await uploadDocument({
+        title: uploadTitle,
+        file: uploadFile,
+      });
+
+      setUploadTitle("");
+      setUploadFile(null);
+      setUploadInputKey((current) => current + 1);
+      await refreshDocuments();
+      setMessage("Document uploaded successfully.");
+    } catch (apiError) {
+      if (!handleAuthFailure(apiError)) {
+        setError(apiError.message || "Document upload failed.");
+      }
+    } finally {
+      setActionId("");
+    }
+  };
+
   return (
     <div className="min-h-screen w-full flex flex-col text-white">
       <Navbar />
@@ -283,6 +325,36 @@ export default function AdminDashboard() {
 
             <section className="glass-card p-7 border border-white/20">
               <h2 className="text-xl font-bold mb-6">Documents</h2>
+
+              <form onSubmit={submitUpload} className="mb-8 grid gap-3 border-b border-white/10 pb-6">
+                <h3 className="text-lg font-semibold">Upload Document</h3>
+
+                <input
+                  type="text"
+                  value={uploadTitle}
+                  onChange={(e) => setUploadTitle(e.target.value)}
+                  disabled={actionId === "upload-document"}
+                  className="w-full p-3 rounded-lg bg-white/10 border border-white/20 outline-none text-white placeholder-gray-300"
+                  placeholder="Title"
+                />
+
+                <input
+                  key={uploadInputKey}
+                  type="file"
+                  accept="application/pdf"
+                  onChange={(e) => setUploadFile(e.target.files?.[0] || null)}
+                  disabled={actionId === "upload-document"}
+                  className="w-full p-3 rounded-lg bg-white/10 border border-white/20 outline-none text-white"
+                />
+
+                <button
+                  type="submit"
+                  disabled={actionId === "upload-document"}
+                  className="bg-blue-600 px-4 py-2 text-sm rounded-lg hover:bg-blue-700 transition disabled:opacity-60 w-fit"
+                >
+                  {actionId === "upload-document" ? "Uploading..." : "Upload Document"}
+                </button>
+              </form>
 
               <div className="space-y-5">
                 {documents.length === 0 && (
