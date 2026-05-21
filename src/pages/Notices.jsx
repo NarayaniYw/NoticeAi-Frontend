@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
-import { buildApiUrl, getDocuments } from "../services/api";
+import { getDocumentFileUrl, getDocuments } from "../services/api";
 
 export default function Notices() {
   const [notices, setNotices] = useState([]);
@@ -19,7 +19,7 @@ export default function Notices() {
           setNotices(documents.map((doc) => ({
             id: doc._id || doc.fileName || doc.title,
             title: doc.title || "Untitled notice",
-            file: doc.fileName ? buildApiUrl(`/uploads/${encodeURIComponent(doc.fileName)}`) : "#",
+            file: getDocumentFileUrl(doc),
           })));
           setError("");
         }
@@ -81,12 +81,18 @@ export default function Notices() {
                 {notice.title}
               </h2>
 
-              <button
-                onClick={() => window.open(notice.file)}
-                className="glass-button text-blue-300"
-              >
-                Open Document
-              </button>
+              {notice.file ? (
+                <button
+                  onClick={() => window.open(notice.file, "_blank", "noreferrer")}
+                  className="glass-button text-blue-300"
+                >
+                  Open Document
+                </button>
+              ) : (
+                <span className="inline-block px-4 py-2 rounded-lg text-sm bg-white/10 text-gray-300">
+                  File unavailable
+                </span>
+              )}
             </div>
           ))}
         </div>

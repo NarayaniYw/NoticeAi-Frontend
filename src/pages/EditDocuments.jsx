@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
-import { buildApiUrl, getDocuments } from "../services/api";
+import { getDocumentFileUrl, getDocuments } from "../services/api";
 
 export default function EditDocuments() {
 
@@ -16,7 +16,7 @@ export default function EditDocuments() {
       title: doc.title || doc.name || doc.originalname || doc.filename || "Untitled document",
       uploadedBy: doc.uploadedBy || "anonymous",
       uploadedAt: doc.createdAt ? new Date(doc.createdAt).toLocaleString() : "",
-      file: doc.file || doc.file_url || doc.fileUrl || doc.url || doc.path || (doc.fileName ? buildApiUrl(`/uploads/${encodeURIComponent(doc.fileName)}`) : "#"),
+      file: getDocumentFileUrl(doc),
     }));
   };
 
@@ -105,14 +105,20 @@ export default function EditDocuments() {
 
             <div className="flex gap-3">
 
-              <a
-                href={doc.file}
-                target="_blank"
-                rel="noreferrer"
-                className="glass-button text-blue-300"
-              >
-                View
-              </a>
+              {doc.file ? (
+                <a
+                  href={doc.file}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="glass-button text-blue-300"
+                >
+                  View
+                </a>
+              ) : (
+                <span className="px-4 py-2 rounded-lg text-sm bg-white/10 text-gray-300">
+                  File unavailable
+                </span>
+              )}
 
               <span className="px-4 py-2 rounded-lg text-sm bg-white/10 text-gray-300">
                 Backend has no delete route

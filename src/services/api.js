@@ -30,6 +30,18 @@ const buildUrl = (path) => {
 
 export const buildApiUrl = (path) => buildUrl(path);
 
+export const getDocumentFileUrl = (doc) =>
+  doc?.fileUrl ||
+  doc?.file_url ||
+  doc?.url ||
+  doc?.file ||
+  doc?.path ||
+  doc?.data?.fileUrl ||
+  doc?.data?.file_url ||
+  doc?.document?.fileUrl ||
+  doc?.document?.file_url ||
+  "";
+
 const getAuthToken = () => getAuthSession()?.token;
 
 const getAuthHeaders = () => {

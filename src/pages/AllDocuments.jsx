@@ -1,6 +1,6 @@
 import Navbar from "../components/Navbar";
 import { useEffect, useState } from "react";
-import { buildApiUrl, getDocuments } from "../services/api";
+import { getDocumentFileUrl, getDocuments } from "../services/api";
 
 export default function AllDocuments() {
 
@@ -16,7 +16,7 @@ export default function AllDocuments() {
       title: doc.title || doc.name || doc.originalname || doc.filename || "Untitled document",
       uploadedBy: doc.uploadedBy || "anonymous",
       uploadedAt: doc.createdAt ? new Date(doc.createdAt).toLocaleString() : "",
-      file: doc.file || doc.file_url || doc.fileUrl || doc.url || doc.path || (doc.fileName ? buildApiUrl(`/uploads/${encodeURIComponent(doc.fileName)}`) : "#"),
+      file: getDocumentFileUrl(doc),
     }));
   };
 
@@ -96,14 +96,20 @@ export default function AllDocuments() {
               </p>
             </div>
 
-            <a
-              href={doc.file}
-              target="_blank"
-              rel="noreferrer"
-              className="bg-blue-500 px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
-            >
-              Open
-            </a>
+            {doc.file ? (
+              <a
+                href={doc.file}
+                target="_blank"
+                rel="noreferrer"
+                className="bg-blue-500 px-4 py-2 rounded-lg text-sm hover:bg-blue-600 transition"
+              >
+                Open
+              </a>
+            ) : (
+              <span className="px-4 py-2 rounded-lg text-sm bg-white/10 text-gray-300">
+                File unavailable
+              </span>
+            )}
           </div>
         ))}
 
