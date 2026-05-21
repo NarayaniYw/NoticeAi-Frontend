@@ -28,12 +28,19 @@ export default function UploadDocument() {
       return;
     }
 
+    const session = getAuthSession();
+    if (!session?.token) {
+      setError("You must be logged in to upload documents.");
+      setStatus("");
+      return;
+    }
+
     setIsUploading(true);
     setError("");
     setStatus("Uploading document...");
 
     try {
-      const uploadedBy = getAuthSession()?.user?.username || getAuthSession()?.user?.email || "anonymous";
+      const uploadedBy = session.user?.username || session.user?.email || "anonymous";
       const data = await uploadDocument({ title, uploadedBy, file });
       const uploadedUrl = getUploadedFileUrl(data);
 

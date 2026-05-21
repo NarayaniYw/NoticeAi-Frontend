@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import Navbar from "../components/Navbar";
-import { ApiError, queryAssistant } from "../services/api";
+import { ApiError, queryAssistant, getAuthSession } from "../services/api";
 
 export default function Chatbot() {
   const [messages, setMessages] = useState([]);
@@ -33,6 +33,19 @@ export default function Chatbot() {
 
   const sendMessage = async () => {
     if (!input.trim() || isSending) return;
+
+    const session = getAuthSession();
+    if (!session?.token) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          type: "ai",
+          text: "You must be logged in to ask questions.",
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        },
+      ]);
+      return;
+    }
 
     const query = input.trim();
     const userMsg = {

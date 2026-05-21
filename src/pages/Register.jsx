@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { registerLocally } from "../services/api";
+import { register as apiRegister } from "../services/api";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -34,9 +34,9 @@ export default function Register() {
     setStatus("Creating your account...");
 
     try {
-      registerLocally({ username, email, password, role });
+      await apiRegister({ username, email, password, role });
       setStatus("Registration successful. Redirecting to login...");
-      navigate("/");
+      setTimeout(() => navigate("/"), 1200);
     } catch (error) {
       setError(error.message || "Registration failed. Please try again.");
       setStatus("");

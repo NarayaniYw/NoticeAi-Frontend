@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { loginLocally, saveAuthSession } from "../services/api";
+import { login as apiLogin, saveAuthSession } from "../services/api";
 
 export default function Login() {
 
@@ -18,22 +18,20 @@ export default function Login() {
       setError("Please enter email and password.");
       return;
     }
-
     setIsLoggingIn(true);
     setError("");
-
     try {
-      const session = loginLocally({ email, password, role });
-
+      // Call API login
+      const data = await apiLogin({ email, password });
+      // Save token and user info
       saveAuthSession({
-        role: session.role,
-        token: session.token,
-        user: session.user,
+        role: data.user?.role || role,
+        token: data.token,
+        user: data.user,
       });
-
-      navigate(getDashboardRoute(session.role));
+      navigate(getDashboardRoute(data.user?.role || role));
     } catch (error) {
-      setError(error.message || `Invalid ${role} credentials.`);
+      setError(error.message || `Invalid credentials.`);
     } finally {
       setIsLoggingIn(false);
     }

@@ -173,30 +173,37 @@ export const clearAuthSession = () => {
   localStorage.removeItem(AUTH_STORAGE_KEY);
 };
 
-export const loginLocally = ({ email, password, role }) => {
+
+// Login via API
+export const login = async ({ email, password }) => {
   if (!email || !password) {
     throw new ApiError("Please enter email and password.");
   }
-
-  return {
-    role,
-    token: null,
-    user: {
-      email,
-      username: email.split("@")[0] || "User",
-    },
-  };
+  const data = await requestJson("/api/auth/login", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  });
+  return data;
 };
 
-export const registerLocally = ({ username, email, password }) => {
+
+// Register via API
+export const register = async ({ username, email, password, role }) => {
   if (!username || !email || !password) {
     throw new ApiError("Please fill all required fields.");
   }
+  const data = await requestJson("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ username, email, password, role }),
+  });
+  return data;
+};
 
-  return {
-    success: true,
-    user: { username, email },
-  };
+// Get current user info (protected route)
+export const getMe = async () => {
+  return requestJson("/api/auth/me", {
+    method: "GET",
+  });
 };
 
 export const getDocuments = () => requestJson("/api/documents");
