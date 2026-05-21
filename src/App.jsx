@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 
 import Login from "./pages/login.jsx";
 import Register from "./pages/Register";
@@ -14,7 +14,7 @@ import SuspiciousUsers from "./pages/SuspiciousUsers";
 function App() {
   return (
     
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* public login route at root */}
         <Route path="/" element={<Login />} />
@@ -29,7 +29,7 @@ function App() {
         <Route path="/suspicious-users" element={<SuspiciousUsers />} />
         {/* fallback or catch-all could be added here */}
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 
